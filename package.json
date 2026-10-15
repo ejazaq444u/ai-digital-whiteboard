@@ -1,0 +1,26 @@
+{
+  "name": "ai-digital-whiteboard",
+  "version": "1.0.0",
+  "description": "Professional AI-powered Digital Whiteboard with Automatic Handwriting Recognition and Correction for Mathematics and English Education",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev": "npm --prefix server run dev",
+    "build:client": "npm --prefix client run build",
+    "build:server": "npm --prefix server run build",
+    "build": "npm run build:client && npm run build:server",
+    "start": "node server/dist/index.js"
+  },
+  "keywords": [
+    "whiteboard",
+    "mathematics",
+    "handwriting-recognition",
+    "katex",
+    "mathlive",
+    "socket.io",
+    "education"
+  ],
+  "author": "Google DeepMind Advanced Agentic Coding",
+  "license": "MIT"
+}

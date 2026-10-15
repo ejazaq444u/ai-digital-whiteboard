@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+server/node_modules/
+client/node_modules/
+
+# Production builds
+server/dist/
+client/dist/
+
+# Environment and sensitive keys
+.env
+.env.local
+.env.*.local
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS temporary files
+.DS_Store
+Thumbs.db
+
+# Uploaded user files
+server/uploads/*
+!server/uploads/.gitkeep
