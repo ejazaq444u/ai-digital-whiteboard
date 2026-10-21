@@ -41,11 +41,12 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onJoinAsStuden
           <div className="inline-flex p-3 bg-gradient-to-tr from-sky-500 to-indigo-600 rounded-2xl shadow-xl shadow-sky-500/20 mb-1">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-white">
-            AI Digital Whiteboard
+          <h2 className="text-2xl font-black tracking-tight text-white flex items-center justify-center space-x-2">
+            <span className="bg-gradient-to-r from-sky-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">DigiClass</span>
           </h2>
+          <p className="text-xs text-sky-400 font-mono font-medium">digiclass.fun</p>
           <p className="text-xs text-slate-400">
-            For Online Mathematics Teaching & Handwriting Correction
+            AI Digital Whiteboard for Online Mathematics & English Teaching
           </p>
         </div>
 

@@ -74,6 +74,10 @@ export const LiveClassroomHeader: React.FC<LiveClassroomHeaderProps> = ({
         </button>
 
         <div className="flex items-center space-x-2">
+          <span className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border border-sky-500/20 rounded-lg">
+            <span className="font-extrabold text-xs tracking-tight bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">DigiClass</span>
+            <span className="text-[10px] text-slate-400 font-mono">.fun</span>
+          </span>
           <input
             type="text"
             value={board.title}

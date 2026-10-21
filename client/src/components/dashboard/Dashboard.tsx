@@ -173,12 +173,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenBoard }) => {
           </div>
           <div>
             <h1 className="text-base font-bold tracking-tight text-white flex items-center space-x-2">
-              <span>AI Digital Whiteboard</span>
-              <span className="text-xs font-normal px-2 py-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-full">
-                Mathematics & English
+              <span className="bg-gradient-to-r from-sky-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent text-lg">DigiClass</span>
+              <span className="text-xs font-mono px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded-full">
+                digiclass.fun
               </span>
             </h1>
-            <p className="text-[11px] text-slate-400">Class 9-12 • O Level • A Level Mathematics</p>
+            <p className="text-[11px] text-slate-400">AI Mathematics & English Digital Whiteboard • Class 9-12 • O/A Level</p>
           </div>
         </div>
 
