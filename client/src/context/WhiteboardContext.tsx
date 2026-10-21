@@ -630,10 +630,24 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (selectedObjectId === id) setSelectedObjectId(null);
   };
 
-  // Save Whiteboard to backend
+  // Save Whiteboard to localStorage & backend
   const saveBoard = async () => {
     if (!board) return;
     setIsSaving(true);
+
+    // Save to localStorage immediately (works on Hostinger static hosting!)
+    try {
+      const saved: WhiteboardDocument[] = JSON.parse(localStorage.getItem('saved_boards') || '[]');
+      const index = saved.findIndex(b => b.id === board.id);
+      if (index >= 0) {
+        saved[index] = board;
+      } else {
+        saved.unshift(board);
+      }
+      localStorage.setItem('saved_boards', JSON.stringify(saved));
+      setLastSavedAt(new Date().toLocaleTimeString());
+    } catch (e) {}
+
     try {
       const res = await fetch(`/api/whiteboards/${board.id}`, {
         method: 'PUT',
@@ -644,7 +658,7 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setLastSavedAt(new Date().toLocaleTimeString());
       }
     } catch (err) {
-      console.error('Failed to save whiteboard:', err);
+      console.warn('Backend unavailable, board saved to local storage');
     } finally {
       setIsSaving(false);
     }

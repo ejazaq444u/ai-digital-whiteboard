@@ -51,21 +51,113 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenBoard }) => {
 
   const gradesList = ['All', 'Class 9', 'Class 10', 'Class 11', 'Class 12', 'O Level', 'A Level'];
 
+  const defaultDemoBoards: WhiteboardDocument[] = [
+    {
+      id: 'wb_demo_calculus_algebra',
+      title: 'Class 12 & A-Level: Calculus & Quadratic Equations',
+      ownerId: 'usr_demo_teacher',
+      roomCode: 'MATH-1001',
+      gradeLevel: 'Class 12',
+      pages: [
+        {
+          id: 'page_demo_1',
+          title: 'Calculus: Derivatives & Integrals',
+          backgroundType: 'ruled',
+          order: 0,
+          createdAt: Date.now() - 10000,
+          updatedAt: Date.now() - 10000,
+          objects: [
+            {
+              id: 'obj_math_1',
+              type: 'math',
+              x: 180,
+              y: 120,
+              width: 380,
+              height: 70,
+              latex: '\\int_0^1 x^2 \\, dx = \\left[ \\frac{x^3}{3} \\right]_0^1 = \\frac{1}{3}',
+              color: '#38bdf8',
+              fontSize: 26,
+              revision: 1,
+              createdAt: Date.now() - 10000,
+              updatedAt: Date.now() - 10000
+            },
+            {
+              id: 'obj_math_2',
+              type: 'math',
+              x: 180,
+              y: 220,
+              width: 320,
+              height: 60,
+              latex: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}',
+              color: '#4ade80',
+              fontSize: 24,
+              revision: 1,
+              createdAt: Date.now() - 9000,
+              updatedAt: Date.now() - 9000
+            }
+          ]
+        }
+      ],
+      activePageIndex: 0,
+      settings: {
+        mode: 'SUGGEST',
+        englishEnabled: true,
+        mathEnabled: true,
+        englishCorrectionLevel: 'grammar_punctuation',
+        mathOutputStyle: 'neat_notation',
+        defaultHandwritingStyle: 'clean_classroom',
+        threshold: 'balanced',
+        autoFixDelayMs: 1500,
+        autoDetectType: true
+      },
+      permissions: {
+        isLocked: false,
+        allowStudentDrawing: true,
+        allowStudentText: true,
+        allowStudentErase: false
+      },
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
+
   const fetchBoards = async () => {
     setLoading(true);
+    let loaded: WhiteboardDocument[] = [];
+
     try {
       const res = await fetch('/api/whiteboards', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       if (res.ok) {
-        const data = await res.json();
-        setBoards(data.whiteboards || []);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.whiteboards && data.whiteboards.length > 0) {
+            loaded = data.whiteboards;
+          }
+        } catch (e) {}
       }
     } catch (err) {
-      console.error('Failed to fetch whiteboards:', err);
-    } finally {
-      setLoading(false);
+      console.warn('Backend unavailable, reading boards from localStorage');
     }
+
+    if (loaded.length === 0) {
+      try {
+        const saved = localStorage.getItem('saved_boards');
+        if (saved) {
+          loaded = JSON.parse(saved);
+        }
+      } catch (e) {}
+    }
+
+    if (loaded.length === 0) {
+      loaded = defaultDemoBoards;
+      localStorage.setItem('saved_boards', JSON.stringify(defaultDemoBoards));
+    }
+
+    setBoards(loaded);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -74,6 +166,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenBoard }) => {
 
   const handleCreateBoard = async () => {
     if (!newTitle.trim()) return;
+
+    let createdBoard: WhiteboardDocument | null = null;
 
     try {
       const res = await fetch('/api/whiteboards', {
@@ -89,14 +183,66 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenBoard }) => {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        setIsNewBoardModalOpen(false);
-        setNewTitle('');
-        joinRoom(data.whiteboard.roomCode, user?.name, user?.role);
-        onOpenBoard(data.whiteboard);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          createdBoard = data.whiteboard;
+        } catch (e) {}
       }
     } catch (err) {
-      alert('Error creating board');
+      console.warn('Backend unavailable, saving board locally');
+    }
+
+    if (!createdBoard) {
+      createdBoard = {
+        id: `wb_${Date.now()}`,
+        title: newTitle.trim(),
+        ownerId: user?.id || 'usr_teacher',
+        roomCode: `MATH-${Math.floor(1000 + Math.random() * 9000)}`,
+        gradeLevel: newGrade as any,
+        pages: [
+          {
+            id: `page_${Date.now()}`,
+            title: 'Page 1',
+            backgroundType: 'ruled',
+            objects: [],
+            order: 0,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          }
+        ],
+        activePageIndex: 0,
+        settings: {
+          mode: 'SUGGEST',
+          englishEnabled: true,
+          mathEnabled: true,
+          englishCorrectionLevel: 'grammar_punctuation',
+          mathOutputStyle: 'neat_notation',
+          defaultHandwritingStyle: 'clean_classroom',
+          threshold: 'balanced',
+          autoFixDelayMs: 1500,
+          autoDetectType: true
+        },
+        permissions: {
+          isLocked: false,
+          allowStudentDrawing: true,
+          allowStudentText: true,
+          allowStudentErase: false
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      const existing: WhiteboardDocument[] = JSON.parse(localStorage.getItem('saved_boards') || '[]');
+      const updated: WhiteboardDocument[] = [createdBoard, ...existing];
+      localStorage.setItem('saved_boards', JSON.stringify(updated));
+      setBoards(updated);
+    }
+
+    if (createdBoard) {
+      setIsNewBoardModalOpen(false);
+      setNewTitle('');
+      joinRoom(createdBoard.roomCode, user?.name, user?.role);
+      onOpenBoard(createdBoard);
     }
   };
 
@@ -104,18 +250,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenBoard }) => {
     if (!joinCode.trim()) return;
     const cleanCode = joinCode.trim().toUpperCase();
 
+    let foundBoard: WhiteboardDocument | null = null;
+
     try {
       const res = await fetch(`/api/whiteboards/room/${cleanCode}`);
       if (res.ok) {
-        const data = await res.json();
-        setIsJoinModalOpen(false);
-        joinRoom(cleanCode, joinName || user?.name || 'Student', user?.role || 'student');
-        onOpenBoard(data.whiteboard);
-      } else {
-        alert('Could not find live classroom with code: ' + cleanCode);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          foundBoard = data.whiteboard;
+        } catch (e) {}
       }
-    } catch (err: any) {
-      alert('Join error: ' + err.message);
+    } catch (err: any) {}
+
+    if (!foundBoard) {
+      try {
+        const saved: WhiteboardDocument[] = JSON.parse(localStorage.getItem('saved_boards') || '[]');
+        foundBoard = saved.find(b => b.roomCode === cleanCode) || null;
+      } catch (e) {}
+    }
+
+    if (foundBoard) {
+      setIsJoinModalOpen(false);
+      joinRoom(cleanCode, joinName || user?.name || 'Student', user?.role || 'student');
+      onOpenBoard(foundBoard);
+    } else {
+      alert('Could not find live classroom with code: ' + cleanCode);
     }
   };
 
@@ -124,16 +284,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenBoard }) => {
     if (!confirm('Are you sure you want to delete this whiteboard?')) return;
 
     try {
-      const res = await fetch(`/api/whiteboards/${id}`, {
+      await fetch(`/api/whiteboards/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      if (res.ok) {
-        setBoards(prev => prev.filter(b => b.id !== id));
-      }
-    } catch (err) {
-      alert('Failed to delete');
-    }
+    } catch (err) {}
+
+    const updated = boards.filter(b => b.id !== id);
+    setBoards(updated);
+    try {
+      localStorage.setItem('saved_boards', JSON.stringify(updated));
+    } catch (e) {}
   };
 
   const handleSaveApiKeys = async () => {

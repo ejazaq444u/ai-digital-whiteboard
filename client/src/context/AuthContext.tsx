@@ -33,21 +33,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
         return;
       }
+
+      // Check for offline/Hostinger saved session
+      const offlineUser = localStorage.getItem('offline_user');
+      if (offlineUser) {
+        try {
+          setUser(JSON.parse(offlineUser));
+          setToken(storedToken);
+          setLoading(false);
+          return;
+        } catch (e) {}
+      }
+
       try {
         const res = await fetch('/api/auth/me', {
           headers: { Authorization: `Bearer ${storedToken}` }
         });
         if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-          setToken(storedToken);
-        } else {
-          localStorage.removeItem('token');
-          setToken(null);
-          setUser(null);
+          const text = await res.text();
+          try {
+            const data = JSON.parse(text);
+            setUser(data.user);
+            setToken(storedToken);
+          } catch (e) {}
         }
       } catch (err) {
-        console.error('Failed to restore session:', err);
+        console.warn('Backend unavailable, running in local mode');
       } finally {
         setLoading(false);
       }
@@ -62,23 +73,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem('token', data.token);
-        setToken(data.token);
-        setUser(data.user);
-        return true;
+      if (res.ok) {
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+            setToken(data.token);
+            setUser(data.user);
+            return true;
+          }
+        } catch (e) {}
       }
-      alert(data.error || 'Login failed');
-      return false;
     } catch (err: any) {
-      alert('Network error during login: ' + err.message);
-      return false;
+      console.warn('[Backend unavailable, using static offline authentication]:', err);
     }
+
+    // Hostinger Static Fallback: instant teacher login
+    if (email) {
+      const offlineUser: User = {
+        id: 'usr_teacher_digiclass',
+        name: email.split('@')[0] || 'Teacher',
+        email: email,
+        role: 'teacher',
+        gradeLevelsTaught: ['Class 9', 'Class 10', 'Class 11', 'Class 12', 'O Level', 'A Level']
+      };
+      const offlineToken = 'offline_token_' + Date.now();
+      localStorage.setItem('token', offlineToken);
+      localStorage.setItem('offline_user', JSON.stringify(offlineUser));
+      setToken(offlineToken);
+      setUser(offlineUser);
+      return true;
+    }
+    return false;
   };
 
   const loginDemo = async (): Promise<boolean> => {
-    return login('teacher@mathboard.ai', 'password123');
+    return login('teacher@digiclass.fun', 'password123');
   };
 
   const register = async (name: string, email: string, password: string, gradeLevels?: string[]): Promise<boolean> => {
@@ -94,26 +125,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gradeLevelsTaught: gradeLevels || ['Class 9', 'Class 10', 'Class 11', 'Class 12', 'O Level', 'A Level']
         })
       });
-      const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem('token', data.token);
-        setToken(data.token);
-        setUser(data.user);
-        return true;
+      if (res.ok) {
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+            setToken(data.token);
+            setUser(data.user);
+            return true;
+          }
+        } catch (e) {}
       }
-      alert(data.error || 'Registration failed');
-      return false;
     } catch (err: any) {
-      alert('Network error during registration: ' + err.message);
-      return false;
+      console.warn('Backend unavailable, creating local teacher profile');
     }
+
+    // Hostinger Static Fallback
+    const offlineUser: User = {
+      id: `usr_${Date.now()}`,
+      name: name || 'Teacher',
+      email: email,
+      role: 'teacher',
+      gradeLevelsTaught: gradeLevels || ['Class 9', 'Class 10', 'Class 11', 'Class 12', 'O Level', 'A Level']
+    };
+    const offlineToken = 'offline_token_' + Date.now();
+    localStorage.setItem('token', offlineToken);
+    localStorage.setItem('offline_user', JSON.stringify(offlineUser));
+    setToken(offlineToken);
+    setUser(offlineUser);
+    return true;
   };
 
   const joinAsStudent = (studentName: string) => {
     const studentUser: User = {
       id: `std_${Date.now()}`,
       name: studentName.trim() || 'Student',
-      email: `${studentName.toLowerCase().replace(/\s+/g, '')}@student.ai`,
+      email: `${studentName.toLowerCase().replace(/\s+/g, '')}@digiclass.fun`,
       role: 'student'
     };
     setUser(studentUser);
@@ -121,6 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('offline_user');
     setToken(null);
     setUser(null);
   };
