@@ -102,9 +102,9 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [board, setBoard] = useState<WhiteboardDocument | null>(null);
   const [activePageIndex, setActivePageIndex] = useState<number>(0);
 
-  // Theme
+  // Theme: default to clean crisp white dry-erase whiteboard
   const [boardTheme, setBoardThemeState] = useState<BoardTheme>(() => {
-    return (localStorage.getItem('board_theme') as BoardTheme) || 'dark';
+    return (localStorage.getItem('board_theme') as BoardTheme) || 'light';
   });
 
   const setBoardTheme = (theme: BoardTheme) => {
@@ -117,11 +117,11 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  // Tools & Styling
+  // Tools & Styling: default to dark ink (#0f172a) on white board
   const [tool, setTool] = useState<ToolType>('pen');
   const [color, setColor] = useState<string>(() => {
     const savedTheme = localStorage.getItem('board_theme');
-    return (savedTheme === 'light' || savedTheme === 'cream') ? '#0f172a' : '#38bdf8';
+    return (savedTheme === 'dark' || savedTheme === 'chalkboard') ? '#38bdf8' : '#0f172a';
   });
   const [strokeWidth, setStrokeWidth] = useState<number>(3);
   const [selectedShapeType, setSelectedShapeType] = useState<'rectangle' | 'circle' | 'triangle' | 'star' | 'line' | 'arrow' | 'coordinate_plane'>('rectangle');
