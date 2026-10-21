@@ -15,6 +15,7 @@ import {
 } from '../types/whiteboard';
 import { useSocket } from './SocketContext';
 import { useAuth } from './AuthContext';
+import { ClientLocalAiParser } from '../utils/localAiParser';
 
 interface WhiteboardContextType {
   board: WhiteboardDocument | null;
@@ -346,6 +347,8 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     setAiStatus('recognizing');
 
+    let res: RecognitionResult | null = null;
+
     try {
       const response = await fetch('/api/ai/recognize', {
         method: 'POST',
@@ -358,25 +361,30 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         })
       });
 
-      if (!response.ok) {
-        setAiStatus('uncertain');
-        return;
+      if (response.ok) {
+        const data = await response.json();
+        res = data.result;
       }
+    } catch (err) {
+      console.warn('[AI Server not reached, using client-side local recognition]:', err);
+    }
 
-      const data = await response.json();
-      const res: RecognitionResult = data.result;
+    // Fallback to client-side local parser (for Hostinger or offline static deployment)
+    if (!res) {
+      res = ClientLocalAiParser.parseStrokes(strokes, aiSettings);
+    }
 
-      if (!res) {
-        setAiStatus('uncertain');
-        return;
-      }
+    if (!res) {
+      setAiStatus('uncertain');
+      return;
+    }
 
-      const suggestion: PendingSuggestion = {
-        result: res,
-        strokes: strokes
-      };
+    const suggestion: PendingSuggestion = {
+      result: res,
+      strokes: strokes
+    };
 
-      setPendingSuggestion(suggestion);
+    setPendingSuggestion(suggestion);
 
       // Check if eligible for AUTO-FIX
       const thresholdScore = aiSettings.threshold === 'conservative' ? 0.88 : aiSettings.threshold === 'aggressive' ? 0.65 : 0.78;
@@ -392,10 +400,6 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       } else {
         setAiStatus('ready');
       }
-    } catch (err) {
-      console.error('[AI Recognition Error]:', err);
-      setAiStatus('offline');
-    }
   };
 
   // Accept Suggestion Non-destructively

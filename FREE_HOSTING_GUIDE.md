@@ -8,9 +8,9 @@ This guide outlines **free methods** to run your AI Digital Whiteboard live onli
 
 Your whiteboard is **currently live on the internet right now** through an encrypted SSL tunnel:
 
-* **Live Public URL**: [https://5b28c96cea2681.lhr.life](https://5b28c96cea2681.lhr.life)
+* **Live Public URL**: [https://cf0c9d69547b30.lhr.life](https://cf0c9d69547b30.lhr.life)
 * **Pre-seeded Demo Room**: `MATH-1001`
-* **Direct Demo Room Link**: [https://5b28c96cea2681.lhr.life/](https://5b28c96cea2681.lhr.life/)
+* **Direct Demo Room Link**: [https://cf0c9d69547b30.lhr.life/](https://cf0c9d69547b30.lhr.life/)
 * **Demo Teacher Login**:
   * Email: `teacher@mathboard.ai`
   * Password: `password123`
